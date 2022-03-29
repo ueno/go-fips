@@ -23,10 +23,28 @@
 
 #include <dlfcn.h>
 
+#undef HAVE___TYPEOF__
+#if (2 <= __GNUC__ \
+     || (4 <= __clang_major__) \
+     || (1210 <= __IBMC__ && defined __IBM__TYPEOF__) \
+     || (0x5110 <= __SUNPRO_C && !__STDC__))
+# define HAVE___TYPEOF__ 1
+#else
+# define HAVE___TYPEOF__ 0
+#endif
+
+#if HAVE___TYPEOF__
+#define DEFINEFUNCPTR(ret, func, args) \
+	static __typeof__(func) (*_g_##func) = 0;
+#else
+#define DEFINEFUNCPTR(ret, func, args) \
+	typedef ret(*_goboringcrypto_PTR_##func) args;   \
+	static _goboringcrypto_PTR_##func _g_##func = 0;
+#endif
+
 #define unlikely(x) __builtin_expect(!!(x), 0)
 #define DEFINEFUNC(ret, func, args, argscall)        \
-	typedef ret(*_goboringcrypto_PTR_##func) args;   \
-	static _goboringcrypto_PTR_##func _g_##func = 0; \
+	DEFINEFUNCPTR(ret, func, args) \
 	static inline ret _goboringcrypto_##func args    \
 	{                                                \
 		if (unlikely(!_g_##func))                    \
@@ -36,9 +54,17 @@
 		return _g_##func argscall;                   \
 	}
 
-#define DEFINEFUNCINTERNAL(ret, func, args, argscall)        \
+#if HAVE___TYPEOF__
+#define DEFINEFUNCPTRINTERNAL(ret, func, args) \
+	static __typeof__(func) (*_g_internal_##func) = 0;
+#else
+#define DEFINEFUNCPTRINTERNAL(ret, func, args) \
 	typedef ret(*_goboringcrypto_internal_PTR_##func) args;   \
-	static _goboringcrypto_internal_PTR_##func _g_internal_##func = 0; \
+	static _goboringcrypto_internal_PTR_##func _g_internal_##func = 0;
+#endif
+
+#define DEFINEFUNCINTERNAL(ret, func, args, argscall)        \
+	DEFINEFUNCPTRINTERNAL(ret, func, args) \
 	static inline ret _goboringcrypto_internal_##func args    \
 	{                                                \
 		if (unlikely(!_g_internal_##func))                    \
