@@ -32,14 +32,21 @@ while getopts "r:" o; do
 done
 shift $((OPTIND-1))
 
-./scripts/setup-go-submodule.sh "${1}"
+TAG=${1}
+
+# Copy commits from wip/goX.Y.Z-openssl branch and store them in patches/.
+git format-patch -o patches "${TAG}..wip/${TAG}-openssl"
+
+"${ROOT}"/scripts/setup-go-submodule.sh "${TAG}"
 
 # Enter the submodule directory.
-cd ./go
+cd go
 ORIGINAL_GIT_SHA=$(git rev-parse HEAD)
 
-"${ROOT}"/scripts/apply-initial-patch.sh
-"${ROOT}"/scripts/create-secondary-patch.sh "${replacement}"
+# Apply the existing patches
+git am "${ROOT}"/patches/0*.patch
+
+"${ROOT}"/scripts/create-vendor-patch.sh "${replacement}"
 
 # Clean things up again after we've generated the patch.
 git reset --hard "${ORIGINAL_GIT_SHA}"
