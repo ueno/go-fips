@@ -17,3 +17,8 @@ func boring_runtime_arg0() string {
 
 //go:linkname fipstls_runtime_arg0 crypto/internal/boring/fipstls.runtime_arg0
 func fipstls_runtime_arg0() string { return boring_runtime_arg0() }
+
+//go:linkname crypto_backend_runtime_arg0 crypto/internal/backend.runtime_arg0
+func crypto_backend_runtime_arg0() string {
+	return boring_runtime_arg0()
+}

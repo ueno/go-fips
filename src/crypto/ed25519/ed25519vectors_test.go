@@ -72,6 +72,7 @@ func TestEd25519Vectors(t *testing.T) {
 }
 
 func downloadEd25519Vectors(t *testing.T) []byte {
+	t.Skip("skipping test that downloads external data")
 	testenv.MustHaveExternalNetwork(t)
 
 	// Create a temp dir and modcache subdir.

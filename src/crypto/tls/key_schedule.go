@@ -7,6 +7,8 @@ package tls
 import (
 	"crypto/elliptic"
 	"crypto/hmac"
+	"crypto/internal/boring"
+	"crypto/internal/boring/bbig"
 	"errors"
 	"hash"
 	"io"
@@ -43,9 +45,20 @@ func (c *cipherSuiteTLS13) expandLabel(secret []byte, label string, context []by
 		b.AddBytes(context)
 	})
 	out := make([]byte, length)
-	n, err := hkdf.Expand(c.hash.New, secret, hkdfLabel.BytesOrPanic()).Read(out)
-	if err != nil || n != length {
-		panic("tls: HKDF-Expand-Label invocation failed unexpectedly")
+	if boring.Enabled {
+		reader, err := boring.ExpandHKDF(c.hash.New, secret, hkdfLabel.BytesOrPanic())
+		if err != nil {
+			panic("tls: HKDF-Expand-Label invocation failed unexpectedly")
+		}
+		n, err := reader.Read(out)
+		if err != nil || n != length {
+			panic("tls: HKDF-Expand-Label invocation failed unexpectedly")
+		}
+	} else {
+		n, err := hkdf.Expand(c.hash.New, secret, hkdfLabel.BytesOrPanic()).Read(out)
+		if err != nil || n != length {
+			panic("tls: HKDF-Expand-Label invocation failed unexpectedly")
+		}
 	}
 	return out
 }
@@ -63,7 +76,15 @@ func (c *cipherSuiteTLS13) extract(newSecret, currentSecret []byte) []byte {
 	if newSecret == nil {
 		newSecret = make([]byte, c.hash.Size())
 	}
-	return hkdf.Extract(c.hash.New, newSecret, currentSecret)
+	if boring.Enabled {
+		ikm, err := boring.ExtractHKDF(c.hash.New, newSecret, currentSecret)
+		if err != nil {
+			panic("tls: HKDF-Extract invocation failed unexpectedly")
+		}
+		return ikm
+	} else {
+		return hkdf.Extract(c.hash.New, newSecret, currentSecret)
+	}
 }
 
 // nextTrafficSecret generates the next traffic secret, given the current one,
@@ -129,9 +150,19 @@ func generateECDHEParameters(rand io.Reader, curveID CurveID) (ecdheParameters, 
 
 	p := &nistParameters{curveID: curveID}
 	var err error
-	p.privateKey, p.x, p.y, err = elliptic.GenerateKey(curve, rand)
-	if err != nil {
-		return nil, err
+	if boring.Enabled {
+		x, y, d, err := boring.GenerateKeyECDH(curve.Params().Name)
+		if err != nil {
+			return nil, err
+		}
+		p.x = bbig.Dec(x)
+		p.y = bbig.Dec(y)
+		p.privateKey = bbig.Dec(d).Bytes()
+	} else {
+		p.privateKey, p.x, p.y, err = elliptic.GenerateKey(curve, rand)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return p, nil
 }
@@ -166,15 +197,28 @@ func (p *nistParameters) PublicKey() []byte {
 
 func (p *nistParameters) SharedKey(peerPublicKey []byte) []byte {
 	curve, _ := curveForCurveID(p.curveID)
-	// Unmarshal also checks whether the given point is on the curve.
-	x, y := elliptic.Unmarshal(curve, peerPublicKey)
-	if x == nil {
-		return nil
-	}
+	if boring.Enabled {
+		k := new(big.Int).SetBytes(p.privateKey)
+		priv, err := boring.NewPrivateKeyECDH(curve.Params().Name, bbig.Enc(p.x), bbig.Enc(p.y), bbig.Enc(k))
+		if err != nil {
+			return nil
+		}
+		sharedKey, err := boring.SharedKeyECDH(priv, peerPublicKey)
+		if err != nil {
+			return nil
+		}
+		return sharedKey
+	} else {
+		// Unmarshal also checks whether the given point is on the curve.
+		x, y := elliptic.Unmarshal(curve, peerPublicKey)
+		if x == nil {
+			return nil
+		}
 
-	xShared, _ := curve.ScalarMult(x, y, p.privateKey)
-	sharedKey := make([]byte, (curve.Params().BitSize+7)/8)
-	return xShared.FillBytes(sharedKey)
+		xShared, _ := curve.ScalarMult(x, y, p.privateKey)
+		sharedKey := make([]byte, (curve.Params().BitSize+7)/8)
+		return xShared.FillBytes(sharedKey)
+	}
 }
 
 type x25519Parameters struct {

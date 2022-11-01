@@ -8,7 +8,14 @@ package tls
 
 import (
 	"crypto/internal/boring/fipstls"
+	boring "crypto/internal/backend"
 )
+
+func init() {
+       if boring.Enabled && !boring.ExecutingTest() {
+               fipstls.Force()
+       }
+}
 
 // needFIPS returns fipstls.Required(); it avoids a new import in common.go.
 func needFIPS() bool {
@@ -17,14 +24,14 @@ func needFIPS() bool {
 
 // fipsMinVersion replaces c.minVersion in FIPS-only mode.
 func fipsMinVersion(c *Config) uint16 {
-	// FIPS requires TLS 1.2.
+	// FIPS requires TLS 1.2 or later.
 	return VersionTLS12
 }
 
 // fipsMaxVersion replaces c.maxVersion in FIPS-only mode.
 func fipsMaxVersion(c *Config) uint16 {
-	// FIPS requires TLS 1.2.
-	return VersionTLS12
+	// FIPS requires TLS 1.2 or later.
+	return VersionTLS13
 }
 
 // default defaultFIPSCurvePreferences is the FIPS-allowed curves,

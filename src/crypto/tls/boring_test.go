@@ -51,11 +51,11 @@ func TestBoringServerProtocolVersion(t *testing.T) {
 	test("VersionTLS10", VersionTLS10, "client offered only unsupported versions")
 	test("VersionTLS11", VersionTLS11, "client offered only unsupported versions")
 	test("VersionTLS12", VersionTLS12, "")
-	test("VersionTLS13", VersionTLS13, "client offered only unsupported versions")
+	test("VersionTLS13", VersionTLS13, "")
 }
 
 func isBoringVersion(v uint16) bool {
-	return v == VersionTLS12
+	return v == VersionTLS12 || v == VersionTLS13
 }
 
 func isBoringCipherSuite(id uint16) bool {
@@ -65,7 +65,9 @@ func isBoringCipherSuite(id uint16) bool {
 		TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
 		TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
 		TLS_RSA_WITH_AES_128_GCM_SHA256,
-		TLS_RSA_WITH_AES_256_GCM_SHA384:
+		TLS_RSA_WITH_AES_256_GCM_SHA384,
+		TLS_AES_128_GCM_SHA256,
+		TLS_AES_256_GCM_SHA384:
 		return true
 	}
 	return false
@@ -311,7 +313,7 @@ func TestBoringCertAlgs(t *testing.T) {
 	// Set up some roots, intermediate CAs, and leaf certs with various algorithms.
 	// X_Y is X signed by Y.
 	R1 := boringCert(t, "R1", boringRSAKey(t, 2048), nil, boringCertCA|boringCertFIPSOK)
-	R2 := boringCert(t, "R2", boringRSAKey(t, 4096), nil, boringCertCA)
+	R2 := boringCert(t, "R2", boringRSAKey(t, 4096), nil, boringCertCA|boringCertFIPSOK)
 
 	M1_R1 := boringCert(t, "M1_R1", boringECDSAKey(t, elliptic.P256()), R1, boringCertCA|boringCertFIPSOK)
 	M2_R1 := boringCert(t, "M2_R1", boringECDSAKey(t, elliptic.P224()), R1, boringCertCA)
