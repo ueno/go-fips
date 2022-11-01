@@ -2,7 +2,7 @@ package ecdsa
 
 import (
 	"crypto"
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"crypto/internal/randutil"
 	"math/big"
 	"io"
@@ -11,7 +11,7 @@ import (
 func HashSign(rand io.Reader, priv *PrivateKey, msg []byte, h crypto.Hash) (*big.Int, *big.Int, error) {
 	randutil.MaybeReadByte(rand)
 
-	if boring.Enabled {
+	if boring.Enabled() {
 		b, err := boringPrivateKey(priv)
 		if err != nil {
 			return nil, nil, err
@@ -28,7 +28,7 @@ func HashSign(rand io.Reader, priv *PrivateKey, msg []byte, h crypto.Hash) (*big
 }
 
 func HashVerify(pub *PublicKey, msg []byte, r, s *big.Int, h crypto.Hash) bool {
-	if boring.Enabled {
+	if boring.Enabled() {
 		bpk, err := boringPublicKey(pub)
 		if err != nil {
 			return false

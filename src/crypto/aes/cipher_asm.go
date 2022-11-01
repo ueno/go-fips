@@ -8,7 +8,7 @@ package aes
 
 import (
 	"crypto/cipher"
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"crypto/internal/subtle"
 	"internal/cpu"
 	"internal/goarch"

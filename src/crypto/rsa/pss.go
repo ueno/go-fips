@@ -9,7 +9,7 @@ package rsa
 import (
 	"bytes"
 	"crypto"
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"errors"
 	"hash"
 	"io"
@@ -215,7 +215,7 @@ func signPSSWithSalt(rand io.Reader, priv *PrivateKey, hash crypto.Hash, hashed,
 		return nil, err
 	}
 
-	if boring.Enabled {
+	if boring.Enabled() {
 		bkey, err := boringPrivateKey(priv)
 		if err != nil {
 			return nil, err
@@ -290,7 +290,7 @@ func SignPSS(rand io.Reader, priv *PrivateKey, hash crypto.Hash, digest []byte, 
 		saltLength = hash.Size()
 	}
 
-	if boring.Enabled && rand == boring.RandReader {
+	if boring.Enabled() && rand == boring.RandReader {
 		bkey, err := boringPrivateKey(priv)
 		if err != nil {
 			return nil, err
@@ -313,7 +313,7 @@ func SignPSS(rand io.Reader, priv *PrivateKey, hash crypto.Hash, digest []byte, 
 // argument may be nil, in which case sensible defaults are used. opts.Hash is
 // ignored.
 func VerifyPSS(pub *PublicKey, hash crypto.Hash, digest []byte, sig []byte, opts *PSSOptions) error {
-	if boring.Enabled {
+	if boring.Enabled() {
 		bkey, err := boringPublicKey(pub)
 		if err != nil {
 			return err

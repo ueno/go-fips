@@ -22,7 +22,7 @@ timing side-channels:
 package hmac
 
 import (
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"crypto/subtle"
 	"hash"
 )
@@ -127,7 +127,7 @@ func (h *hmac) Reset() {
 // the returned Hash does not implement encoding.BinaryMarshaler
 // or encoding.BinaryUnmarshaler.
 func New(h func() hash.Hash, key []byte) hash.Hash {
-	if boring.Enabled {
+	if boring.Enabled() {
 		hm := boring.NewHMAC(h, key)
 		if hm != nil {
 			return hm

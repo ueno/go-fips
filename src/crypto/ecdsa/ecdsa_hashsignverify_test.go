@@ -2,7 +2,7 @@ package ecdsa
 
 import (
 	"crypto"
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"crypto/elliptic"
 	"crypto/rand"
 	"testing"
@@ -34,7 +34,7 @@ func testHashSignAndHashVerify(t *testing.T, c elliptic.Curve, tag string) {
 func TestHashSignAndHashVerify(t *testing.T) {
 	testHashSignAndHashVerify(t, elliptic.P256(), "p256")
 
-	if testing.Short() && !boring.Enabled {
+	if testing.Short() && !boring.Enabled() {
 		return
 	}
 	testHashSignAndHashVerify(t, elliptic.P384(), "p384")

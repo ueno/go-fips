@@ -6,7 +6,7 @@ package rsa
 
 import (
 	"crypto"
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"crypto/internal/randutil"
 	"crypto/subtle"
 	"errors"
@@ -47,7 +47,7 @@ func EncryptPKCS1v15(random io.Reader, pub *PublicKey, msg []byte) ([]byte, erro
 		return nil, ErrMessageTooLong
 	}
 
-	if boring.Enabled && random == boring.RandReader {
+	if boring.Enabled() && random == boring.RandReader {
 		bkey, err := boringPublicKey(pub)
 		if err != nil {
 			return nil, err
@@ -67,7 +67,7 @@ func EncryptPKCS1v15(random io.Reader, pub *PublicKey, msg []byte) ([]byte, erro
 	em[len(em)-len(msg)-1] = 0
 	copy(mm, msg)
 
-	if boring.Enabled {
+	if boring.Enabled() {
 		var bkey *boring.PublicKeyRSA
 		bkey, err = boringPublicKey(pub)
 		if err != nil {
@@ -94,7 +94,7 @@ func DecryptPKCS1v15(random io.Reader, priv *PrivateKey, ciphertext []byte) ([]b
 		return nil, err
 	}
 
-	if boring.Enabled {
+	if boring.Enabled() {
 		bkey, err := boringPrivateKey(priv)
 		if err != nil {
 			return nil, err
@@ -173,7 +173,7 @@ func decryptPKCS1v15(random io.Reader, priv *PrivateKey, ciphertext []byte) (val
 		return
 	}
 
-	if boring.Enabled {
+	if boring.Enabled() {
 		var bkey *boring.PrivateKeyRSA
 		bkey, err = boringPrivateKey(priv)
 		if err != nil {
@@ -285,12 +285,12 @@ func SignPKCS1v15(random io.Reader, priv *PrivateKey, hash crypto.Hash, hashed [
 		return nil, ErrMessageTooLong
 	}
 
-	if boring.Enabled {
+	if boring.Enabled() {
 		bkey, err := boringPrivateKey(priv)
 		if err != nil {
 			return nil, err
 		}
-		return boring.SignRSAPKCS1v15(bkey, hash, hashed)
+		return boring.SignRSAPKCS1v15(bkey, hash, hashed, true)
 	}
 
 	// EM = 0x00 || 0x01 || PS || 0x00 || T
@@ -317,12 +317,12 @@ func SignPKCS1v15(random io.Reader, priv *PrivateKey, hash crypto.Hash, hashed [
 // returning a nil error. If hash is zero then hashed is used directly. This
 // isn't advisable except for interoperability.
 func VerifyPKCS1v15(pub *PublicKey, hash crypto.Hash, hashed []byte, sig []byte) error {
-	if boring.Enabled {
+	if boring.Enabled() {
 		bkey, err := boringPublicKey(pub)
 		if err != nil {
 			return err
 		}
-		if err := boring.VerifyRSAPKCS1v15(bkey, hash, hashed, sig); err != nil {
+		if err := boring.VerifyRSAPKCS1v15(bkey, hash, hashed, sig, hash != crypto.Hash(0)); err != nil {
 			return ErrVerification
 		}
 		return nil

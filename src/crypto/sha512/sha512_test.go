@@ -8,7 +8,7 @@ package sha512
 
 import (
 	"bytes"
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"crypto/rand"
 	"encoding"
 	"encoding/hex"
@@ -823,7 +823,7 @@ func TestBlockSize(t *testing.T) {
 
 // Tests that blockGeneric (pure Go) and block (in assembly for some architectures) match.
 func TestBlockGeneric(t *testing.T) {
-	if boring.Enabled {
+	if boring.Enabled() {
 		t.Skip("BoringCrypto doesn't expose digest")
 	}
 	gen, asm := New().(*digest), New().(*digest)
@@ -893,7 +893,7 @@ func TestLargeHashes(t *testing.T) {
 }
 
 func TestAllocations(t *testing.T) {
-	if boring.Enabled {
+	if boring.Enabled() {
 		t.Skip("BoringCrypto doesn't allocate the same way as stdlib")
 	}
 	in := []byte("hello, world!")

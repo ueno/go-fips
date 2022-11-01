@@ -8,7 +8,7 @@ package sha256
 
 import (
 	"crypto"
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"encoding/binary"
 	"errors"
 	"hash"
@@ -160,7 +160,7 @@ func (d *digest) Reset() {
 // encoding.BinaryUnmarshaler to marshal and unmarshal the internal
 // state of the hash.
 func New() hash.Hash {
-	if boring.Enabled {
+	if boring.Enabled() {
 		return boring.NewSHA256()
 	}
 	d := new(digest)
@@ -170,7 +170,7 @@ func New() hash.Hash {
 
 // New224 returns a new hash.Hash computing the SHA224 checksum.
 func New224() hash.Hash {
-	if boring.Enabled {
+	if boring.Enabled() {
 		return boring.NewSHA224()
 	}
 	d := new(digest)
@@ -261,7 +261,7 @@ func (d *digest) checkSum() [Size]byte {
 
 // Sum256 returns the SHA256 checksum of the data.
 func Sum256(data []byte) [Size]byte {
-	if boring.Enabled {
+	if boring.Enabled() {
 		return boring.SHA256(data)
 	}
 	var d digest
@@ -272,7 +272,7 @@ func Sum256(data []byte) [Size]byte {
 
 // Sum224 returns the SHA224 checksum of the data.
 func Sum224(data []byte) [Size224]byte {
-	if boring.Enabled {
+	if boring.Enabled() {
 		return boring.SHA224(data)
 	}
 	var d digest

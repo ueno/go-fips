@@ -6,7 +6,7 @@ package hmac
 
 import (
 	"bytes"
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
@@ -584,8 +584,8 @@ func TestHMAC(t *testing.T) {
 }
 
 func TestNonUniqueHash(t *testing.T) {
-	if boring.Enabled {
-		t.Skip("hash.Hash provided by boringcrypto are not comparable")
+	if boring.Enabled() {
+		t.Skip("hash.Hash provided by !no_openssl are not comparable")
 	}
 	sha := sha256.New()
 	defer func() {

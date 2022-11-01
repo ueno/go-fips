@@ -15,7 +15,7 @@ import (
 	"testing"
 )
 
-import "crypto/internal/boring"
+import boring "crypto/internal/backend"
 
 func TestKeyGeneration(t *testing.T) {
 	for _, size := range []int{128, 1024, 2048, 3072} {
@@ -114,7 +114,7 @@ func testKeyBasics(t *testing.T, priv *PrivateKey) {
 		t.Errorf("private exponent too large")
 	}
 
-	if boring.Enabled {
+	if boring.Enabled() {
 		// Cannot call encrypt/decrypt directly. Test via PKCS1v15.
 		msg := []byte("hi!")
 		enc, err := EncryptPKCS1v15(rand.Reader, &priv.PublicKey, msg)
@@ -181,7 +181,7 @@ func init() {
 }
 
 func BenchmarkRSA2048Decrypt(b *testing.B) {
-	if boring.Enabled {
+	if boring.Enabled() {
 		b.Skip("no raw decrypt in BoringCrypto")
 	}
 
@@ -207,7 +207,7 @@ func BenchmarkRSA2048Sign(b *testing.B) {
 }
 
 func Benchmark3PrimeRSA2048Decrypt(b *testing.B) {
-	if boring.Enabled {
+	if boring.Enabled() {
 		b.Skip("no raw decrypt in BoringCrypto")
 	}
 

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//go:build boringcrypto
+//go:build !no_openssl
 
 package main
 
@@ -12,6 +12,6 @@ import (
 )
 
 func init() {
-	fmt.Printf("SKIP with boringcrypto enabled\n")
+	fmt.Printf("SKIP with !no_openssl enabled\n")
 	os.Exit(0)
 }

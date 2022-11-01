@@ -9,7 +9,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"crypto"
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"crypto/rand"
 	"encoding/hex"
 	"os"
@@ -188,7 +188,7 @@ func TestMalleability(t *testing.T) {
 
 func TestAllocations(t *testing.T) {
 	t.Skip("Allocations test broken with openssl linkage")
-	if boring.Enabled {
+	if boring.Enabled() {
 		t.Skip("skipping allocations test with BoringCrypto")
 	}
 	if strings.HasSuffix(os.Getenv("GO_BUILDER_NAME"), "-noopt") {

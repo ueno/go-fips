@@ -10,7 +10,7 @@
 package rand
 
 import (
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"errors"
 	"io"
 	"os"
@@ -23,7 +23,7 @@ import (
 const urandomDevice = "/dev/urandom"
 
 func init() {
-	if boring.Enabled {
+	if boring.Enabled() {
 		Reader = boring.RandReader
 		return
 	}

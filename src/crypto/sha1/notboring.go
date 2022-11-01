@@ -11,10 +11,10 @@ import (
 	"hash"
 )
 
-const boringEnabled = false
+var boringEnabled = false
 
-func boringNewSHA1() hash.Hash { panic("boringcrypto: not available") }
+func boringNewSHA1() hash.Hash { panic("!no_openssl: not available") }
 
 func boringUnreachable() {}
 
-func boringSHA1([]byte) [20]byte { panic("boringcrypto: not available") }
+func boringSHA1([]byte) [20]byte { panic("!no_openssl: not available") }
