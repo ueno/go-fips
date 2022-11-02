@@ -9,6 +9,7 @@ package tls
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	boring "crypto/internal/backend"
 	"crypto/internal/boring/fipstls"
 	"crypto/rand"
 	"crypto/rsa"
@@ -324,7 +325,7 @@ func TestBoringCertAlgs(t *testing.T) {
 	I_M2 := boringCert(t, "I_M2", I_R1.key, M2_R1, boringCertCA|boringCertFIPSOK)
 
 	L1_I := boringCert(t, "L1_I", boringECDSAKey(t, elliptic.P384()), I_R1, boringCertLeaf|boringCertFIPSOK)
-	L2_I := boringCert(t, "L2_I", boringRSAKey(t, 1024), I_R1, boringCertLeaf)
+	L2_I := boringCert(t, "L2_I", boringRSAKey(t, 1024), I_R1, boringCertLeaf|boringCertNotBoring)
 
 	// client verifying server cert
 	testServerCert := func(t *testing.T, desc string, pool *x509.CertPool, key interface{}, list [][]byte, ok bool) {
@@ -363,6 +364,11 @@ func TestBoringCertAlgs(t *testing.T) {
 		serverConfig := testConfig.Clone()
 		serverConfig.ClientCAs = pool
 		serverConfig.ClientAuth = RequireAndVerifyClientCert
+		if boring.Enabled() {
+			serverConfig.Certificates[0].Certificate = [][]byte{testRSA2048Certificate}
+			serverConfig.Certificates[0].PrivateKey = testRSA2048PrivateKey
+			serverConfig.BuildNameToCertificate()
+		}
 
 		_, serverErr := boringHandshake(t, clientConfig, serverConfig)
 
@@ -385,8 +391,8 @@ func TestBoringCertAlgs(t *testing.T) {
 	// exhaustive test with computed answers.
 	r1pool := x509.NewCertPool()
 	r1pool.AddCert(R1.cert)
-	testServerCert(t, "basic", r1pool, L2_I.key, [][]byte{L2_I.der, I_R1.der}, true)
-	testClientCert(t, "basic (client cert)", r1pool, L2_I.key, [][]byte{L2_I.der, I_R1.der}, true)
+	testServerCert(t, "basic", r1pool, L2_I.key, [][]byte{L2_I.der, I_R1.der}, !(L2_I.notBoring && boring.Enabled()))
+	testClientCert(t, "basic (client cert)", r1pool, L2_I.key, [][]byte{L2_I.der, I_R1.der}, !(L2_I.notBoring && boring.Enabled()))
 	fipstls.Force()
 	testServerCert(t, "basic (fips)", r1pool, L2_I.key, [][]byte{L2_I.der, I_R1.der}, false)
 	testClientCert(t, "basic (fips, client cert)", r1pool, L2_I.key, [][]byte{L2_I.der, I_R1.der}, false)
@@ -407,7 +413,7 @@ func TestBoringCertAlgs(t *testing.T) {
 			leaf = L2_I
 		}
 		for i := 0; i < 64; i++ {
-			reachable := map[string]bool{leaf.parentOrg: true}
+			reachable := map[string]bool{leaf.parentOrg: !(leaf.notBoring && boring.Enabled())}
 			reachableFIPS := map[string]bool{leaf.parentOrg: leaf.fipsOK}
 			list := [][]byte{leaf.der}
 			listName := leaf.name
@@ -415,7 +421,7 @@ func TestBoringCertAlgs(t *testing.T) {
 				if cond != 0 {
 					list = append(list, c.der)
 					listName += "," + c.name
-					if reachable[c.org] {
+					if reachable[c.org] && !(c.notBoring && boring.Enabled()) {
 						reachable[c.parentOrg] = true
 					}
 					if reachableFIPS[c.org] && c.fipsOK {
@@ -439,7 +445,7 @@ func TestBoringCertAlgs(t *testing.T) {
 					if cond != 0 {
 						rootName += "," + c.name
 						pool.AddCert(c.cert)
-						if reachable[c.org] {
+						if reachable[c.org] && !(c.notBoring && boring.Enabled()) {
 							shouldVerify = true
 						}
 						if reachableFIPS[c.org] && c.fipsOK {
@@ -465,6 +471,7 @@ const (
 	boringCertCA = iota
 	boringCertLeaf
 	boringCertFIPSOK = 0x80
+	boringCertNotBoring = 0x100
 )
 
 func boringRSAKey(t *testing.T, size int) *rsa.PrivateKey {
@@ -491,6 +498,7 @@ type boringCertificate struct {
 	cert      *x509.Certificate
 	key       interface{}
 	fipsOK    bool
+	notBoring bool
 }
 
 func boringCert(t *testing.T, name string, key interface{}, parent *boringCertificate, mode int) *boringCertificate {
@@ -512,7 +520,7 @@ func boringCert(t *testing.T, name string, key interface{}, parent *boringCertif
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
 		BasicConstraintsValid: true,
 	}
-	if mode&^boringCertFIPSOK == boringCertLeaf {
+	if mode&^(boringCertFIPSOK|boringCertNotBoring) == boringCertLeaf {
 		tmpl.DNSNames = []string{"example.com"}
 	} else {
 		tmpl.IsCA = true
@@ -549,7 +557,8 @@ func boringCert(t *testing.T, name string, key interface{}, parent *boringCertif
 	}
 
 	fipsOK := mode&boringCertFIPSOK != 0
-	return &boringCertificate{name, org, parentOrg, der, cert, key, fipsOK}
+	notBoring := mode&boringCertNotBoring != 0
+	return &boringCertificate{name, org, parentOrg, der, cert, key, fipsOK, notBoring}
 }
 
 // A self-signed test certificate with an RSA key of size 2048, for testing

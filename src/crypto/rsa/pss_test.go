@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"compress/bzip2"
 	"crypto"
+	boring "crypto/internal/backend"
 	"crypto/rand"
 	"crypto/sha1"
 	"crypto/sha256"
@@ -76,6 +77,9 @@ func TestEMSAPSS(t *testing.T) {
 // TestPSSGolden tests all the test vectors in pss-vect.txt from
 // ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-1/pkcs-1v2-1-vec.zip
 func TestPSSGolden(t *testing.T) {
+	if boring.Enabled() {
+		t.Skip("skipping PSS test with BoringCrypto: SHA-1 not allowed")
+	}
 	inFile, err := os.Open("testdata/pss-vect.txt.bz2")
 	if err != nil {
 		t.Fatalf("Failed to open input file: %s", err)
@@ -167,6 +171,10 @@ func TestPSSGolden(t *testing.T) {
 // TestPSSOpenSSL ensures that we can verify a PSS signature from OpenSSL with
 // the default options. OpenSSL sets the salt length to be maximal.
 func TestPSSOpenSSL(t *testing.T) {
+	if boring.Enabled() {
+		t.Skip("skipping PSS test with BoringCrypto: too short key")
+	}
+
 	hash := crypto.SHA256
 	h := hash.New()
 	h.Write([]byte("testing"))
@@ -194,10 +202,15 @@ func TestPSSNilOpts(t *testing.T) {
 	h.Write([]byte("testing"))
 	hashed := h.Sum(nil)
 
+	// Shouldn't this check return value?
 	SignPSS(rand.Reader, rsaPrivateKey, hash, hashed, nil)
 }
 
 func TestPSSSigning(t *testing.T) {
+	if boring.Enabled() {
+		t.Skip("skipping PSS test with BoringCrypto: too short key")
+	}
+
 	var saltLengthCombinations = []struct {
 		signSaltLength, verifySaltLength int
 		good                             bool
@@ -233,7 +246,7 @@ func TestPSSSigning(t *testing.T) {
 }
 
 func TestSignWithPSSSaltLengthAuto(t *testing.T) {
-	key, err := GenerateKey(rand.Reader, 513)
+	key, err := GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		t.Fatal(err)
 	}
