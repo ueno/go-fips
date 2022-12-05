@@ -19,7 +19,7 @@ int _goboringcrypto_RSA_generate_key_fips(GO_RSA *rsa, int size, GO_BN_GENCB *cb
 	return ret;
 }
 
-int _goboringcrypto_RSA_digest_and_sign_pss_mgf1(GO_RSA *rsa, unsigned int *out_len, uint8_t *out, size_t max_out,
+int _goboringcrypto_RSA_digest_and_sign_pss_mgf1(GO_RSA *rsa, size_t *out_len, uint8_t *out, size_t max_out,
 		const uint8_t *in, size_t in_len, EVP_MD *md, const EVP_MD *mgf1_md, int salt_len)
 {
 	EVP_PKEY_CTX *ctx;
