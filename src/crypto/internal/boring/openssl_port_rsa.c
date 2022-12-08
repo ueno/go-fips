@@ -173,7 +173,7 @@ err:
 	return ret;
 }
 
-int _goboringcrypto_EVP_RSA_sign(EVP_MD *md, const uint8_t *msg, unsigned int msgLen, uint8_t *sig, unsigned int *slen, RSA *rsa)
+int _goboringcrypto_EVP_RSA_sign(EVP_MD *md, const uint8_t *msg, unsigned int msgLen, uint8_t *sig, size_t *slen, RSA *rsa)
 {
 	int result;
 	EVP_PKEY *key = _goboringcrypto_EVP_PKEY_new();

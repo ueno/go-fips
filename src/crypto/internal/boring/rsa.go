@@ -307,10 +307,9 @@ func SignRSAPKCS1v15(priv *PrivateKeyRSA, h crypto.Hash, msg []byte, msgIsHashed
 		return nil, errors.New("crypto/rsa: unsupported hash function: " + strconv.Itoa(int(h)))
 	}
 
-	var out []byte
-	var outLen C.uint
-
 	if msgIsHashed {
+		var out []byte
+		var outLen C.uint
 		PanicIfStrictFIPS("You must provide a raw unhashed message for PKCS1v15 signing and use HashSignPKCS1v15 instead of SignPKCS1v15")
 		nid := C._goboringcrypto_EVP_MD_type(md)
 		if priv.withKey(func(key *C.GO_RSA) C.int {
@@ -322,6 +321,9 @@ func SignRSAPKCS1v15(priv *PrivateKeyRSA, h crypto.Hash, msg []byte, msgIsHashed
 		runtime.KeepAlive(priv)
 		return out[:outLen], nil
 	}
+
+	var out []byte
+	var outLen C.size_t
 
 	if priv.withKey(func(key *C.GO_RSA) C.int {
 		return C._goboringcrypto_EVP_RSA_sign(md, base(msg), C.uint(len(msg)), base(out), &outLen, key)
