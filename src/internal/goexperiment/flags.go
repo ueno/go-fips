@@ -100,4 +100,6 @@ type Flags struct {
 	// this compels the Go runtime to write to some arbitrary file, which
 	// may be exploited.
 	PageTrace bool
+
+	StrictFIPSRuntime bool
 }

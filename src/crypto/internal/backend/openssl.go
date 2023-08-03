@@ -14,6 +14,10 @@ import (
 	"github.com/golang-fips/openssl-fips/openssl"
 )
 
+func init() {
+	strictFIPSOpenSSLRuntimeCheck()
+}
+
 // Enabled controls whether FIPS crypto is enabled.
 var Enabled = openssl.Enabled
 

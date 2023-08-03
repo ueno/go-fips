@@ -11,11 +11,16 @@ import (
 	"crypto"
 	"crypto/cipher"
 	"crypto/internal/boring/sig"
-	"math/big"
-	"github.com/golang-fips/openssl-fips/openssl"
 	"hash"
 	"io"
+	"math/big"
+
+	"github.com/golang-fips/openssl-fips/openssl"
 )
+
+func init() {
+	strictFIPSNonCompliantBinaryCheck()
+}
 
 var enabled = false
 
