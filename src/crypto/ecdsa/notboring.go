@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//go:build !boringcrypto
+//go:build no_openssl
 
 package ecdsa
 
-import "crypto/internal/boring"
+import boring "crypto/internal/backend"
 
 func boringPublicKey(*PublicKey) (*boring.PublicKeyECDSA, error) {
-	panic("boringcrypto: not available")
+	panic("!no_openssl: not available")
 }
 func boringPrivateKey(*PrivateKey) (*boring.PrivateKeyECDSA, error) {
-	panic("boringcrypto: not available")
+	panic("!no_openssl: not available")
 }

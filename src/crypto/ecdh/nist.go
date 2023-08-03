@@ -5,7 +5,7 @@
 package ecdh
 
 import (
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"crypto/internal/nistec"
 	"crypto/internal/randutil"
 	"encoding/binary"
@@ -36,7 +36,7 @@ func (c *nistCurve[Point]) String() string {
 var errInvalidPrivateKey = errors.New("crypto/ecdh: invalid private key")
 
 func (c *nistCurve[Point]) GenerateKey(rand io.Reader) (*PrivateKey, error) {
-	if boring.Enabled && rand == boring.RandReader {
+	if boring.Enabled() && rand == boring.RandReader {
 		key, bytes, err := boring.GenerateKeyECDH(c.name)
 		if err != nil {
 			return nil, err
@@ -79,7 +79,7 @@ func (c *nistCurve[Point]) NewPrivateKey(key []byte) (*PrivateKey, error) {
 	if isZero(key) || !isLess(key, c.scalarOrder) {
 		return nil, errInvalidPrivateKey
 	}
-	if boring.Enabled {
+	if boring.Enabled() {
 		bk, err := boring.NewPrivateKeyECDH(c.name, key)
 		if err != nil {
 			return nil, err
@@ -173,7 +173,7 @@ func (c *nistCurve[Point]) NewPublicKey(key []byte) (*PublicKey, error) {
 		curve:     c,
 		publicKey: append([]byte{}, key...),
 	}
-	if boring.Enabled {
+	if boring.Enabled() {
 		bk, err := boring.NewPublicKeyECDH(c.name, k.publicKey)
 		if err != nil {
 			return nil, err
@@ -196,7 +196,7 @@ func (c *nistCurve[Point]) ecdh(local *PrivateKey, remote *PublicKey) ([]byte, e
 	// only be the result of a scalar multiplication if one of the inputs is the
 	// zero scalar or the point at infinity.
 
-	if boring.Enabled {
+	if boring.Enabled() {
 		return boring.ECDH(local.boring, remote.boring)
 	}
 

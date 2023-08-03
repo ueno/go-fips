@@ -12,7 +12,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/elliptic"
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha512"
@@ -995,7 +995,7 @@ const roleServer = false
 func (c *Config) supportedVersions(isClient bool) []uint16 {
 	versions := make([]uint16, 0, len(supportedVersions))
 	for _, v := range supportedVersions {
-		if boring.Enabled && !boring.SupportsHKDF() && v > VersionTLS12 {
+		if boring.Enabled() && !boring.SupportsHKDF() && v > VersionTLS12 {
 			continue
 		}
 		if needFIPS() && (v < fipsMinVersion(c) || v > fipsMaxVersion(c)) {

@@ -7,7 +7,7 @@ package aes
 import (
 	"crypto/cipher"
 	"crypto/internal/alias"
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"strconv"
 )
 
@@ -38,7 +38,7 @@ func NewCipher(key []byte) (cipher.Block, error) {
 	case 16, 24, 32:
 		break
 	}
-	if boring.Enabled {
+	if boring.Enabled() {
 		return boring.NewAESCipher(key)
 	}
 	return newCipher(key)

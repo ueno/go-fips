@@ -8,7 +8,7 @@ package ecdh
 
 import (
 	"crypto"
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"crypto/subtle"
 	"errors"
 	"io"
@@ -163,7 +163,7 @@ func (k *PrivateKey) PublicKey() *PublicKey {
 			// (We can't return it anyhow.)
 			kpub, err := k.boring.PublicKey()
 			if err != nil {
-				panic("boringcrypto: " + err.Error())
+				panic("!no_openssl: " + err.Error())
 			}
 			k.publicKey = &PublicKey{
 				curve:     k.curve,

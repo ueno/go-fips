@@ -79,7 +79,7 @@ func TestEMSAPSS(t *testing.T) {
 // TestPSSGolden tests all the test vectors in pss-vect.txt from
 // ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-1/pkcs-1v2-1-vec.zip
 func TestPSSGolden(t *testing.T) {
-	if boring.Enabled && !boringtest.Supports(t, "SHA1") {
+	if boring.Enabled() && !boringtest.Supports(t, "SHA1") {
 		t.Skip("skipping PSS test with BoringCrypto: SHA-1 not allowed")
 	}
 	inFile, err := os.Open("testdata/pss-vect.txt.bz2")
@@ -173,7 +173,7 @@ func TestPSSGolden(t *testing.T) {
 // TestPSSOpenSSL ensures that we can verify a PSS signature from OpenSSL with
 // the default options. OpenSSL sets the salt length to be maximal.
 func TestPSSOpenSSL(t *testing.T) {
-	if boring.Enabled {
+	if boring.Enabled() {
 		t.Skip("skipping PSS test with BoringCrypto: too short key")
 	}
 
@@ -209,7 +209,7 @@ func TestPSSNilOpts(t *testing.T) {
 }
 
 func TestPSSSigning(t *testing.T) {
-	if boring.Enabled && !boringtest.Supports(t, "SHA1") {
+	if boring.Enabled() && !boringtest.Supports(t, "SHA1") {
 		t.Skip("skipping PSS test with BoringCrypto: too short key")
 	}
 

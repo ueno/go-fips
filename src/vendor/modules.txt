@@ -1,3 +1,6 @@
+# github.com/golang-fips/openssl-fips v0.0.0-20230714114059-9051f24728fe
+## explicit; go 1.18
+github.com/golang-fips/openssl-fips/openssl
 # golang.org/x/crypto v0.3.1-0.20221117191849-2c476679df9a
 ## explicit; go 1.17
 golang.org/x/crypto/chacha20

@@ -10,7 +10,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/x509"
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"crypto/internal/backend/boringtest"
 	"testing"
 )
@@ -71,7 +71,7 @@ func TestEqual(t *testing.T) {
 	if testing.Short() {
 		return
 	}
-	if !boring.Enabled || boringtest.Supports(t, "CurveP224") {
+	if !boring.Enabled() || boringtest.Supports(t, "CurveP224") {
 		t.Run("P224", func(t *testing.T) { testEqual(t, elliptic.P224()) })
 	}
 	t.Run("P384", func(t *testing.T) { testEqual(t, elliptic.P384()) })

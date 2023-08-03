@@ -27,8 +27,8 @@ import (
 	"crypto/ecdh"
 	"crypto/elliptic"
 	"crypto/internal/bigmod"
-	"crypto/internal/boring"
-	"crypto/internal/boring/bbig"
+	boring "crypto/internal/backend"
+	"crypto/internal/backend/bbig"
 	"crypto/internal/nistec"
 	"crypto/internal/randutil"
 	"crypto/sha512"
@@ -154,7 +154,7 @@ func (priv *PrivateKey) Sign(rand io.Reader, digest []byte, opts crypto.SignerOp
 func GenerateKey(c elliptic.Curve, rand io.Reader) (*PrivateKey, error) {
 	randutil.MaybeReadByte(rand)
 
-	if boring.Enabled && rand == boring.RandReader {
+	if boring.Enabled() && rand == boring.RandReader {
 		x, y, d, err := boring.GenerateKeyECDSA(c.Params().Name)
 		if err != nil {
 			return nil, err
@@ -248,7 +248,7 @@ var errNoAsm = errors.New("no assembly implementation available")
 func SignASN1(rand io.Reader, priv *PrivateKey, hash []byte) ([]byte, error) {
 	randutil.MaybeReadByte(rand)
 
-	if boring.Enabled && rand == boring.RandReader {
+	if boring.Enabled() && rand == boring.RandReader {
 		b, err := boringPrivateKey(priv)
 		if err != nil {
 			return nil, err
@@ -458,7 +458,7 @@ func (zr) Read(dst []byte) (n int, err error) {
 // VerifyASN1 verifies the ASN.1 encoded signature, sig, of hash using the
 // public key, pub. Its return value records whether the signature is valid.
 func VerifyASN1(pub *PublicKey, hash, sig []byte) bool {
-	if boring.Enabled {
+	if boring.Enabled() {
 		key, err := boringPublicKey(pub)
 		if err != nil {
 			return false

@@ -9,7 +9,7 @@ import (
 	"crypto"
 	"crypto/cipher"
 	"crypto/ecdh"
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
@@ -288,8 +288,8 @@ func TestNewPrivateKey(t *testing.T) {
 				t.Errorf("unexpectedly accepted %q", input)
 			} else if k != nil {
 				t.Error("PrivateKey was not nil on error")
-			} else if strings.Contains(err.Error(), "boringcrypto") {
-				t.Errorf("boringcrypto error leaked out: %v", err)
+			} else if strings.Contains(err.Error(), "!no_openssl") {
+				t.Errorf("!no_openssl error leaked out: %v", err)
 			}
 		}
 	})
@@ -349,8 +349,8 @@ func TestNewPublicKey(t *testing.T) {
 				t.Errorf("unexpectedly accepted %q", input)
 			} else if k != nil {
 				t.Error("PublicKey was not nil on error")
-			} else if strings.Contains(err.Error(), "boringcrypto") {
-				t.Errorf("boringcrypto error leaked out: %v", err)
+			} else if strings.Contains(err.Error(), "!no_openssl") {
+				t.Errorf("!no_openssl error leaked out: %v", err)
 			}
 		}
 	})
@@ -443,7 +443,7 @@ func main() {
 // implementations into the binary. This also guarantees that govulncheck can
 // avoid warning about a curve-specific vulnerability if that curve is not used.
 func TestLinker(t *testing.T) {
-	if boring.Enabled {
+	if boring.Enabled() {
 		t.Skip("test doesn't make sense when building with external crypto backend")
 	}
 	if testing.Short() {

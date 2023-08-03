@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//go:build boringcrypto && linux && (amd64 || arm64) && !android && !cmd_go_bootstrap && !msan
+//go:build linux && !android && !cmd_go_bootstrap && !msan && !no_openssl
+// +build linux,!android,!cmd_go_bootstrap,!msan,!no_openssl
 
-package boring
+package openssl
 
-// #include "goboringcrypto.h"
+// #include "goopenssl.h"
 import "C"
 import "unsafe"
 
@@ -16,7 +17,7 @@ func (randReader) Read(b []byte) (int, error) {
 	// Note: RAND_bytes should never fail; the return value exists only for historical reasons.
 	// We check it even so.
 	if len(b) > 0 && C._goboringcrypto_RAND_bytes((*C.uint8_t)(unsafe.Pointer(&b[0])), C.size_t(len(b))) == 0 {
-		return 0, fail("RAND_bytes")
+		return 0, NewOpenSSLError("RAND_bytes")
 	}
 	return len(b), nil
 }

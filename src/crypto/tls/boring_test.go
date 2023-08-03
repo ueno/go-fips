@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//go:build boringcrypto
+//go:build !no_openssl
 
 package tls
 
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"crypto/internal/backend/boringtest"
 	"crypto/internal/boring/fipstls"
 	"crypto/rand"
@@ -46,7 +46,7 @@ func TestBoringServerProtocolVersion(t *testing.T) {
 	test("VersionTLS10", VersionTLS10, "")
 	test("VersionTLS11", VersionTLS11, "")
 	test("VersionTLS12", VersionTLS12, "")
-	if boring.Enabled && !boring.SupportsHKDF() {
+	if boring.Enabled() && !boring.SupportsHKDF() {
 		test("VersionTLS13", VersionTLS13, "client offered only unsupported versions")
 	} else {
 		test("VersionTLS13", VersionTLS13, "")
@@ -238,7 +238,7 @@ func TestBoringServerSignatureAndHash(t *testing.T) {
 
 			clientConfig := testConfig.Clone()
 
-			if boring.Enabled {
+			if boring.Enabled() {
 				serverConfig.Rand = boring.RandReader
 				clientConfig.Rand = boring.RandReader
 			}
@@ -369,7 +369,7 @@ func TestBoringCertAlgs(t *testing.T) {
 		serverConfig.Certificates = []Certificate{{Certificate: list, PrivateKey: key}}
 		serverConfig.BuildNameToCertificate()
 
-		if boring.Enabled {
+		if boring.Enabled() {
 			serverConfig.Rand = boring.RandReader
 			clientConfig.Rand = boring.RandReader
 		}
@@ -400,13 +400,13 @@ func TestBoringCertAlgs(t *testing.T) {
 		serverConfig := testConfig.Clone()
 		serverConfig.ClientCAs = pool
 		serverConfig.ClientAuth = RequireAndVerifyClientCert
-		if boring.Enabled {
+		if boring.Enabled() {
 			serverConfig.Certificates[0].Certificate = [][]byte{testRSA2048Certificate}
 			serverConfig.Certificates[0].PrivateKey = testRSA2048PrivateKey
 			serverConfig.BuildNameToCertificate()
 		}
 
-		if boring.Enabled {
+		if boring.Enabled() {
 			serverConfig.Rand = boring.RandReader
 			clientConfig.Rand = boring.RandReader
 		}
@@ -432,8 +432,8 @@ func TestBoringCertAlgs(t *testing.T) {
 	// exhaustive test with computed answers.
 	r1pool := x509.NewCertPool()
 	r1pool.AddCert(R1.cert)
-	testServerCert(t, "basic", r1pool, L2_I.key, [][]byte{L2_I.der, I_R1.der}, !(L2_I.notBoring && boring.Enabled))
-	testClientCert(t, "basic (client cert)", r1pool, L2_I.key, [][]byte{L2_I.der, I_R1.der}, !(L2_I.notBoring && boring.Enabled))
+	testServerCert(t, "basic", r1pool, L2_I.key, [][]byte{L2_I.der, I_R1.der}, !(L2_I.notBoring && boring.Enabled()))
+	testClientCert(t, "basic (client cert)", r1pool, L2_I.key, [][]byte{L2_I.der, I_R1.der}, !(L2_I.notBoring && boring.Enabled()))
 	fipstls.Force()
 	testServerCert(t, "basic (fips)", r1pool, L2_I.key, [][]byte{L2_I.der, I_R1.der}, false)
 	testClientCert(t, "basic (fips, client cert)", r1pool, L2_I.key, [][]byte{L2_I.der, I_R1.der}, false)
@@ -454,7 +454,7 @@ func TestBoringCertAlgs(t *testing.T) {
 			leaf = L2_I
 		}
 		for i := 0; i < 64; i++ {
-			reachable := map[string]bool{leaf.parentOrg: !(leaf.notBoring && boring.Enabled)}
+			reachable := map[string]bool{leaf.parentOrg: !(leaf.notBoring && boring.Enabled())}
 			reachableFIPS := map[string]bool{leaf.parentOrg: leaf.fipsOK}
 			list := [][]byte{leaf.der}
 			listName := leaf.name
@@ -462,7 +462,7 @@ func TestBoringCertAlgs(t *testing.T) {
 				if cond != 0 {
 					list = append(list, c.der)
 					listName += "," + c.name
-					if reachable[c.org] && !(c.notBoring && boring.Enabled) {
+					if reachable[c.org] && !(c.notBoring && boring.Enabled()) {
 						reachable[c.parentOrg] = true
 					}
 					if reachableFIPS[c.org] && c.fipsOK {
@@ -486,7 +486,7 @@ func TestBoringCertAlgs(t *testing.T) {
 					if cond != 0 {
 						rootName += "," + c.name
 						pool.AddCert(c.cert)
-						if reachable[c.org] && !(c.notBoring && boring.Enabled) {
+						if reachable[c.org] && !(c.notBoring && boring.Enabled()) {
 							shouldVerify = true
 						}
 						if reachableFIPS[c.org] && c.fipsOK {

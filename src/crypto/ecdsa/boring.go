@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//go:build boringcrypto
+//go:build !no_openssl
 
 package ecdsa
 
 import (
-	"crypto/internal/boring"
-	"crypto/internal/boring/bbig"
+	boring "crypto/internal/backend"
+	"crypto/internal/backend/bbig"
 	"crypto/internal/boring/bcache"
 	"math/big"
 )

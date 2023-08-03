@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//go:build boringcrypto
+//go:build !no_openssl
 
 package tls
 
@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-       if boring.Enabled && !boring.ExecutingTest() {
+       if boring.Enabled() && !boring.ExecutingTest() {
                fipstls.Force()
        }
 }

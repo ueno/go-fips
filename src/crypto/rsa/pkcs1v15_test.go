@@ -7,7 +7,7 @@ package rsa_test
 import (
 	"bytes"
 	"crypto"
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"crypto/internal/backend/boringtest"
 	"crypto/rand"
 	. "crypto/rsa"
@@ -56,7 +56,7 @@ var decryptPKCS1v15Tests = []DecryptPKCS1v15Test{
 }
 
 func TestDecryptPKCS1v15(t *testing.T) {
-	if boring.Enabled && !boringtest.Supports(t, "PKCSv1.5") {
+	if boring.Enabled() && !boringtest.Supports(t, "PKCSv1.5") {
 		t.Skip("skipping PKCS#1 v1.5 encryption test with BoringCrypto")
 	}
 
@@ -84,7 +84,7 @@ func TestDecryptPKCS1v15(t *testing.T) {
 }
 
 func TestEncryptPKCS1v15(t *testing.T) {
-	if boring.Enabled && !boringtest.Supports(t, "PKCSv1.5") {
+	if boring.Enabled() && !boringtest.Supports(t, "PKCSv1.5") {
 		t.Skip("skipping PKCS#1 v1.5 encryption test with BoringCrypto")
 	}
 
@@ -149,7 +149,7 @@ var decryptPKCS1v15SessionKeyTests = []DecryptPKCS1v15Test{
 }
 
 func TestEncryptPKCS1v15SessionKey(t *testing.T) {
-	if boring.Enabled && !boringtest.Supports(t, "PKCSv1.5") {
+	if boring.Enabled() && !boringtest.Supports(t, "PKCSv1.5") {
 		t.Skip("skipping PKCS#1 v1.5 encryption test with BoringCrypto")
 	}
 
@@ -167,7 +167,7 @@ func TestEncryptPKCS1v15SessionKey(t *testing.T) {
 }
 
 func TestEncryptPKCS1v15DecrypterSessionKey(t *testing.T) {
-	if boring.Enabled && !boringtest.Supports(t, "PKCSv1.5") {
+	if boring.Enabled() && !boringtest.Supports(t, "PKCSv1.5") {
 		t.Skip("skipping PKCS#1 v1.5 encryption test with BoringCrypto")
 	}
 
@@ -277,7 +277,7 @@ func TestUnpaddedSignature(t *testing.T) {
 }
 
 func TestShortSessionKey(t *testing.T) {
-	if boring.Enabled && !boringtest.Supports(t, "PKCSv1.5") {
+	if boring.Enabled() && !boringtest.Supports(t, "PKCSv1.5") {
 		t.Skip("skipping PKCS#1 v1.5 encryption test with BoringCrypto")
 	}
 

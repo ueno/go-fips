@@ -28,8 +28,8 @@ package rsa
 import (
 	"crypto"
 	"crypto/internal/bigmod"
-	"crypto/internal/boring"
-	"crypto/internal/boring/bbig"
+	boring "crypto/internal/backend"
+	"crypto/internal/backend/bbig"
 	"crypto/internal/randutil"
 	"crypto/rand"
 	"crypto/subtle"
@@ -286,7 +286,7 @@ func GenerateKey(random io.Reader, bits int) (*PrivateKey, error) {
 func GenerateMultiPrimeKey(random io.Reader, nprimes int, bits int) (*PrivateKey, error) {
 	randutil.MaybeReadByte(random)
 
-	if boring.Enabled && random == boring.RandReader && nprimes == 2 &&
+	if boring.Enabled() && random == boring.RandReader && nprimes == 2 &&
 		(bits == 2048 || bits == 3072 || bits == 4096) {
 		bN, bE, bD, bP, bQ, bDp, bDq, bQinv, err := boring.GenerateKeyRSA(bits)
 		if err != nil {
@@ -504,7 +504,7 @@ func EncryptOAEP(hash hash.Hash, random io.Reader, pub *PublicKey, msg []byte, l
 		return nil, ErrMessageTooLong
 	}
 
-	if boring.Enabled && random == boring.RandReader {
+	if boring.Enabled() && random == boring.RandReader {
 		bkey, err := boringPublicKey(pub)
 		if err != nil {
 			return nil, err
@@ -533,7 +533,7 @@ func EncryptOAEP(hash hash.Hash, random io.Reader, pub *PublicKey, msg []byte, l
 	mgf1XOR(db, hash, seed)
 	mgf1XOR(seed, hash, db)
 
-	if boring.Enabled {
+	if boring.Enabled() {
 		var bkey *boring.PublicKeyRSA
 		bkey, err = boringPublicKey(pub)
 		if err != nil {
@@ -675,7 +675,7 @@ func decryptOAEP(hash, mgfHash hash.Hash, random io.Reader, priv *PrivateKey, ci
 		return nil, ErrDecryption
 	}
 
-	if boring.Enabled {
+	if boring.Enabled() {
 		bkey, err := boringPrivateKey(priv)
 		if err != nil {
 			return nil, err

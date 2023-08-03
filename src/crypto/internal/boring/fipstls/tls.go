@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//go:build boringcrypto
+//go:build !no_openssl
 
 // Package fipstls allows control over whether crypto/tls requires FIPS-approved settings.
-// This package only exists with GOEXPERIMENT=boringcrypto, but the effects are independent
+// This package only exists with GOEXPERIMENT=!no_openssl, but the effects are independent
 // of the use of BoringCrypto.
 package fipstls
 

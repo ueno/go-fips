@@ -12,7 +12,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/elliptic"
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"crypto/internal/backend/boringtest"
 	"crypto/rand"
 	"crypto/rsa"
@@ -653,7 +653,7 @@ func TestCreateSelfSignedCertificate(t *testing.T) {
 	extraExtensionData := []byte("extra extension")
 
 	for _, test := range tests {
-		if boring.Enabled && test.sigAlgo.isRSAPSS() {
+		if boring.Enabled() && test.sigAlgo.isRSAPSS() {
 			key, _ := test.priv.(*rsa.PrivateKey)
 			if key.PublicKey.N.BitLen() < 2048 {
 				t.Logf("skipping short key with BoringCrypto: %d", key.PublicKey.N.BitLen())
@@ -3641,7 +3641,7 @@ func TestRevocationListCheckSignatureFrom(t *testing.T) {
 	var testCurve elliptic.Curve
 	// If OpenSSL supports P224, use the default upstream behavior,
 	// otherwise test with P384
-	if !boring.Enabled || boringtest.Supports(t, "CurveP224") {
+	if !boring.Enabled() || boringtest.Supports(t, "CurveP224") {
 		testCurve = elliptic.P224()
 	} else {
 		testCurve = elliptic.P384()

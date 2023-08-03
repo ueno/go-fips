@@ -8,7 +8,7 @@ import (
 	"bufio"
 	"bytes"
 	"crypto"
-	"crypto/internal/boring"
+	boring "crypto/internal/backend"
 	"crypto/rand"
 	. "crypto/rsa"
 	"crypto/sha1"
@@ -34,7 +34,7 @@ func TestKeyGeneration(t *testing.T) {
 		if bits := priv.N.BitLen(); bits != size {
 			t.Errorf("key too short (%d vs %d)", bits, size)
 		}
-		if boring.Enabled && size < 1024 {
+		if boring.Enabled() && size < 1024 {
 			t.Logf("skipping short key with BoringCrypto: %d", size)
 			continue
 		}
@@ -120,12 +120,12 @@ func testKeyBasics(t *testing.T, priv *PrivateKey) {
 		t.Errorf("private exponent too large")
 	}
 
-	if boring.Enabled {
+	if boring.Enabled() {
 		// Cannot call encrypt/decrypt with raw RSA. PKCSv1.5
 		// not supported in some configurations.  Test with
 		// OAEP if possible (i.e., key size is equal to or
 		// longer than 2048 bits).
-		if bits := priv.N.BitLen(); boring.Enabled && bits < 2048 {
+		if bits := priv.N.BitLen(); boring.Enabled() && bits < 2048 {
 			t.Logf("skipping short key with BoringCrypto: %d", bits)
 			return
 		}
@@ -167,7 +167,7 @@ func testKeyBasics(t *testing.T, priv *PrivateKey) {
 }
 
 func TestAllocations(t *testing.T) {
-	if boring.Enabled {
+	if boring.Enabled() {
 		t.Skip("skipping allocations test with BoringCrypto")
 	}
 	testenv.SkipIfOptimizationOff(t)
@@ -213,7 +213,7 @@ func TestEverything(t *testing.T) {
 			if bits := priv.N.BitLen(); bits != size {
 				t.Errorf("key too short (%d vs %d)", bits, size)
 			}
-			if boring.Enabled && size < 2048 {
+			if boring.Enabled() && size < 2048 {
 				t.Skip("skipping short key with BoringCrypto")
 			}
 			testEverything(t, priv)
@@ -667,7 +667,7 @@ func TestEncryptOAEP(t *testing.T) {
 	n := new(big.Int)
 	for i, test := range testEncryptOAEPData {
 		n.SetString(test.modulus, 16)
-		if boring.Enabled {
+		if boring.Enabled() {
 			t.Log("skipping test in FIPS mode due to short keys and unpadded RSA operations not allowed with FIPS")
 			continue
 		}
@@ -694,7 +694,7 @@ func TestDecryptOAEP(t *testing.T) {
 	d := new(big.Int)
 	for i, test := range testEncryptOAEPData {
 		n.SetString(test.modulus, 16)
-		if boring.Enabled && !boringtest.Supports(t, "RSA1024") && n.BitLen() < 2048 {
+		if boring.Enabled() && !boringtest.Supports(t, "RSA1024") && n.BitLen() < 2048 {
 			t.Logf("skipping encryption tests with BoringCrypto: too short key: %d", n.BitLen())
 			continue
 		}
@@ -741,7 +741,7 @@ func Test2DecryptOAEP(t *testing.T) {
 	sha1 := crypto.SHA1
 	sha256 := crypto.SHA256
 
-	if boring.Enabled && n.BitLen() < 2048 {
+	if boring.Enabled() && n.BitLen() < 2048 {
 		t.Skipf("skipping encryption tests with BoringCrypto: too short key: %d", n.BitLen())
 	}
 
@@ -760,7 +760,7 @@ func TestEncryptDecryptOAEP(t *testing.T) {
 	d := new(big.Int)
 	for i, test := range testEncryptOAEPData {
 		n.SetString(test.modulus, 16)
-		if boring.Enabled && !boringtest.Supports(t, "RSA1024") && n.BitLen() < 2048 {
+		if boring.Enabled() && !boringtest.Supports(t, "RSA1024") && n.BitLen() < 2048 {
 			t.Logf("skipping encryption tests with BoringCrypto: too short key: %d", n.BitLen())
 			continue
 		}
