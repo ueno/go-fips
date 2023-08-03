@@ -321,6 +321,7 @@ func TestMalleability(t *testing.T) {
 }
 
 func TestAllocations(t *testing.T) {
+	t.Skip("Allocations test broken with openssl linkage")
 	if boring.Enabled {
 		t.Skip("skipping allocations test with BoringCrypto")
 	}

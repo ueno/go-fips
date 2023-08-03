@@ -7,6 +7,7 @@ package tls
 import (
 	"crypto/ecdh"
 	"crypto/hmac"
+	"crypto/internal/boring"
 	"errors"
 	"fmt"
 	"hash"
@@ -58,9 +59,20 @@ func (c *cipherSuiteTLS13) expandLabel(secret []byte, label string, context []by
 		panic(fmt.Errorf("failed to construct HKDF label: %s", err))
 	}
 	out := make([]byte, length)
-	n, err := hkdf.Expand(c.hash.New, secret, hkdfLabelBytes).Read(out)
-	if err != nil || n != length {
-		panic("tls: HKDF-Expand-Label invocation failed unexpectedly")
+	if boring.Enabled {
+		reader, err := boring.ExpandHKDF(c.hash.New, secret, hkdfLabelBytes)
+		if err != nil {
+			panic("tls: HKDF-Expand-Label invocation failed unexpectedly")
+		}
+		n, err := reader.Read(out)
+		if err != nil || n != length {
+			panic("tls: HKDF-Expand-Label invocation failed unexpectedly")
+		}
+	} else {
+		n, err := hkdf.Expand(c.hash.New, secret, hkdfLabelBytes).Read(out)
+		if err != nil || n != length {
+			panic("tls: HKDF-Expand-Label invocation failed unexpectedly")
+		}
 	}
 	return out
 }
@@ -78,7 +90,15 @@ func (c *cipherSuiteTLS13) extract(newSecret, currentSecret []byte) []byte {
 	if newSecret == nil {
 		newSecret = make([]byte, c.hash.Size())
 	}
-	return hkdf.Extract(c.hash.New, newSecret, currentSecret)
+	if boring.Enabled {
+		ikm, err := boring.ExtractHKDF(c.hash.New, newSecret, currentSecret)
+		if err != nil {
+			panic("tls: HKDF-Extract invocation failed unexpectedly")
+		}
+		return ikm
+	} else {
+		return hkdf.Extract(c.hash.New, newSecret, currentSecret)
+	}
 }
 
 // nextTrafficSecret generates the next traffic secret, given the current one,

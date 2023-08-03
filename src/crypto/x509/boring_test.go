@@ -10,6 +10,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/internal/boring/fipstls"
+	"crypto/internal/backend/boringtest"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509/pkix"
@@ -58,7 +59,15 @@ func TestBoringAllowCert(t *testing.T) {
 	R3 := testBoringCert(t, "R3", boringRSAKey(t, 4096), nil, boringCertCA|boringCertFIPSOK)
 
 	M1_R1 := testBoringCert(t, "M1_R1", boringECDSAKey(t, elliptic.P256()), R1, boringCertCA|boringCertFIPSOK)
-	M2_R1 := testBoringCert(t, "M2_R1", boringECDSAKey(t, elliptic.P224()), R1, boringCertCA)
+
+	var M2_R1 *boringCertificate
+	// If OpenSSL supports P224, use the default upstream behavior,
+	// otherwise test with P384
+	if boringtest.Supports(t, "CurveP224") {
+		M2_R1 = testBoringCert(t, "M2_R1", boringECDSAKey(t, elliptic.P224()), R1, boringCertCA)
+	} else {
+		M2_R1 = testBoringCert(t, "M2_R1", boringECDSAKey(t, elliptic.P384()), R1, boringCertCA|boringCertFIPSOK)
+	}
 
 	I_R1 := testBoringCert(t, "I_R1", boringRSAKey(t, 3072), R1, boringCertCA|boringCertFIPSOK)
 	testBoringCert(t, "I_R2", I_R1.key, R2, boringCertCA|boringCertFIPSOK)

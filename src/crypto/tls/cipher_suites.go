@@ -354,6 +354,11 @@ var defaultCipherSuitesTLS13NoAES = []uint16{
 	TLS_AES_256_GCM_SHA384,
 }
 
+var defaultFIPSCipherSuitesTLS13 = []uint16{
+	TLS_AES_128_GCM_SHA256,
+	TLS_AES_256_GCM_SHA384,
+}
+
 var (
 	hasGCMAsmAMD64 = cpu.X86.HasAES && cpu.X86.HasPCLMULQDQ
 	hasGCMAsmARM64 = cpu.ARM64.HasAES && cpu.ARM64.HasPMULL

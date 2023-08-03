@@ -9,6 +9,8 @@ import (
 	"bytes"
 	"compress/bzip2"
 	"crypto/elliptic"
+	"crypto/internal/backend/boringtest"
+	"crypto/internal/boring"
 	"crypto/internal/bigmod"
 	"crypto/rand"
 	"crypto/sha1"
@@ -36,8 +38,17 @@ func testAllCurves(t *testing.T, f func(*testing.T, elliptic.Curve)) {
 	}
 	if testing.Short() {
 		tests = tests[:1]
+	} else if !boring.Enabled || boringtest.Supports(t, "CurveP224") {
+		p224 := struct {
+			name  string
+			curve elliptic.Curve
+		}{"P224", elliptic.P224()}
+		tests = append(tests, p224)
 	}
 	for _, test := range tests {
+		if boring.Enabled && !boringtest.Supports(t, "Curve"+test.name) {
+			t.Skip("unsupported test in FIPS mode")
+		}
 		curve := test.curve
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
@@ -235,7 +246,11 @@ func TestVectors(t *testing.T) {
 
 			switch curve {
 			case "P-224":
-				pub.Curve = elliptic.P224()
+				if !boring.Enabled || boringtest.Supports(t, "CurveP224") {
+					pub.Curve = elliptic.P224()
+				} else {
+					pub.Curve = nil
+				}
 			case "P-256":
 				pub.Curve = elliptic.P256()
 			case "P-384":

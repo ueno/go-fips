@@ -9,6 +9,7 @@ import (
 	"crypto"
 	"crypto/cipher"
 	"crypto/ecdh"
+	"crypto/internal/boring"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
@@ -442,6 +443,9 @@ func main() {
 // implementations into the binary. This also guarantees that govulncheck can
 // avoid warning about a curve-specific vulnerability if that curve is not used.
 func TestLinker(t *testing.T) {
+	if boring.Enabled {
+		t.Skip("test doesn't make sense when building with external crypto backend")
+	}
 	if testing.Short() {
 		t.Skip("test requires running 'go build'")
 	}

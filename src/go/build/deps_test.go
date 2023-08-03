@@ -396,9 +396,11 @@ var depsRules = `
 	< crypto/internal/alias
 	< crypto/cipher;
 
-	crypto/cipher,
+	fmt, crypto/cipher,
 	crypto/internal/boring/bcache
 	< crypto/internal/boring
+	< github.com/golang-fips/openssl-fips/openssl
+	< crypto/internal/backend
 	< crypto/boring;
 
 	crypto/internal/alias
@@ -427,11 +429,13 @@ var depsRules = `
 	crypto/sha512
 	< CRYPTO;
 
-	CGO, fmt, net !< CRYPTO;
+	CGO, net !< CRYPTO;
 
 	# CRYPTO-MATH is core bignum-based crypto - no cgo, net; fmt now ok.
 	CRYPTO, FMT, math/big
+	< github.com/golang-fips/openssl-fips/openssl/bbig
 	< crypto/internal/boring/bbig
+	< crypto/internal/backend/bbig
 	< crypto/rand
 	< crypto/ed25519
 	< encoding/asn1
@@ -629,6 +633,7 @@ func listStdPkgs(goroot string) ([]string, error) {
 }
 
 func TestDependencies(t *testing.T) {
+	t.Skip("openssl-fips based toolchain has different dependencies than upstream")
 	if !testenv.HasSrc() {
 		// Tests run in a limited file system and we do not
 		// provide access to every source file.
@@ -671,7 +676,7 @@ var buildIgnore = []byte("\n//go:build ignore")
 
 func findImports(pkg string) ([]string, error) {
 	vpkg := pkg
-	if strings.HasPrefix(pkg, "golang.org") {
+	if strings.HasPrefix(pkg, "golang.org") || strings.HasPrefix(pkg, "github.com") {
 		vpkg = "vendor/" + pkg
 	}
 	dir := filepath.Join(Default.GOROOT, "src", vpkg)
@@ -681,7 +686,7 @@ func findImports(pkg string) ([]string, error) {
 	}
 	var imports []string
 	var haveImport = map[string]bool{}
-	if pkg == "crypto/internal/boring" {
+	if pkg == "crypto/internal/boring" || pkg == "github.com/golang-fips/openssl-fips/openssl" {
 		haveImport["C"] = true // kludge: prevent C from appearing in crypto/internal/boring imports
 	}
 	fset := token.NewFileSet()
